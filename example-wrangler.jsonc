@@ -4,6 +4,7 @@
   "compatibility_date": "2025-04-04",
   "main": "./workers/app.ts",
   "vars": {
-    "VALUE_FROM_CLOUDFLARE": "Hello from Cloudflare"
-  }
+    "NODE_ENV": "production",
+    "ANTHROPIC_API_KEY": "<anthropic-api-key>"
+  },
 }

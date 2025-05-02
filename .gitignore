@@ -11,3 +11,7 @@
 .wrangler
 .dev.vars*
 
+.aider*
+.env
+wrangler.jsonc
+worker-configuration.d.ts
