@@ -4,7 +4,7 @@ import { X } from "lucide-react";
 import { Link } from "react-router";
 import { transformedCodeIsLoadingAtom, userCodeAtom } from "@/lib/atoms.client";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import ErrorBoundary from "@/components/ErrorBoundary";
+import { ErrorBoundary } from "react-error-boundary";
 import { ComponentWithCode } from "@/components/ComponentWithCode";
 import { recordsAtom, transformedCodeAtom } from "@/lib/atoms.client";
 import { useMutation } from "@tanstack/react-query";
@@ -12,6 +12,7 @@ import { useDebouncedCallback } from "use-debounce";
 import { AIChat } from "@/components/AIChat";
 import { transformCode } from "@/lib/compiler.client";
 import CodeEditor from "@/components/CodeEditor";
+import { ErrorView } from "@/components/ErrorView";
 
 export default function Editor(_props: Route.ComponentProps) {
   const [userCode, setUserCode] = useAtom(userCodeAtom);
@@ -61,17 +62,20 @@ export default function Editor(_props: Route.ComponentProps) {
           <div className="flex-1 h-full overflow-hidden">
             <div className="h-full p-4 bg-muted/20 overflow-auto">
               <div className="h-full flex items-center justify-center border-2 border-dashed rounded-lg border-muted p-8">
-                <ErrorBoundary
-                  fallback={<div>Error</div>}
-                  // onError={(error) => {
-                  //   console.error("Error in Artifact:", error);
-                  // }}
-                >
-                  <ComponentWithCode
-                    transformedCode={transformedCode}
-                    componentProps={{ data: records }}
-                  />
-                </ErrorBoundary>
+                {userCode ? (
+                  <ErrorBoundary
+                    fallbackRender={({ error }) => <ErrorView error={error} />}
+                  >
+                    <ComponentWithCode
+                      transformedCode={transformedCode}
+                      componentProps={{ data: records }}
+                    />
+                  </ErrorBoundary>
+                ) : (
+                  <div className="text-muted-foreground text-center">
+                    <p className="text-sm">Write some code to see a preview</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>

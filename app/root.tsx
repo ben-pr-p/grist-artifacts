@@ -45,6 +45,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           src="https://docs.getgrist.com/grist-plugin-api.js"
           rel="preload"
         />
+        <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
         <Meta />
         <Links />
       </head>

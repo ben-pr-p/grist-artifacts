@@ -1,6 +1,5 @@
 import { Send } from "lucide-react";
 import { atom, useAtom, useAtomValue, useSetAtom } from "jotai";
-import { useMutation } from "@tanstack/react-query";
 import { orpcFetchQuery } from "@/lib/orpcFetch.client";
 import {
   describeGristStructure,
@@ -25,7 +24,6 @@ import {
 } from "@/components/ui/chat/chat-bubble";
 import { ChatMessageList } from "@/components/ui/chat/chat-message-list";
 import { useToast } from "@/components/ui/use-toast";
-import MessageLoading from "@/components/ui/chat/message-loading";
 
 const _chatMessagesAtom = atom<
   {
@@ -191,7 +189,7 @@ export function AIChat(props: {
     : chatMessagesWithInProgressStreamingMessage;
 
   return (
-    <ExpandableChat size="lg" position="bottom-right">
+    <ExpandableChat size="lg" position="bottom-left">
       <ExpandableChatHeader className="flex items-center p-2 border-b">
         <h2 className="text-sm font-medium">AI Assistant</h2>
         <div className="ml-auto">

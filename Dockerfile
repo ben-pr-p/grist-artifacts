@@ -1,22 +1,28 @@
-FROM node:20-alpine AS development-dependencies-env
-COPY . /app
-WORKDIR /app
-RUN npm ci
+# use the official Bun image
+# see all versions at https://hub.docker.com/r/oven/bun/tags
+FROM oven/bun:1.2 AS build
+WORKDIR /build
 
-FROM node:20-alpine AS production-dependencies-env
-COPY ./package.json package-lock.json /app/
-WORKDIR /app
-RUN npm ci --omit=dev
+# Copy package files first to cache dependencies
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile
 
-FROM node:20-alpine AS build-env
-COPY . /app/
-COPY --from=development-dependencies-env /app/node_modules /app/node_modules
-WORKDIR /app
-RUN npm run build
+# Then copy source code and build
+COPY . .
+ENV NODE_ENV=production
+RUN bun run build
 
-FROM node:20-alpine
-COPY ./package.json package-lock.json /app/
-COPY --from=production-dependencies-env /app/node_modules /app/node_modules
-COPY --from=build-env /app/build /app/build
-WORKDIR /app
-CMD ["npm", "run", "start"]
+FROM oven/bun:1.2-slim AS runtime
+WORKDIR /usr/src/app
+
+# Copy only production files and node_modules
+COPY --from=build --chown=bun:bun /build/package.json /build/bun.lock ./
+COPY --from=build --chown=bun:bun /build/node_modules ./node_modules
+COPY --from=build --chown=bun:bun /build/build ./build
+
+USER bun
+EXPOSE 3000/tcp
+EXPOSE 3000/udp
+ENV HOST=0.0.0.0
+ENV NODE_ENV=production
+ENTRYPOINT [ "bun", "run", "start" ]

@@ -1,79 +1,53 @@
-# Welcome to React Router!
+# Grist Artifacts
 
-A modern, production-ready template for building full-stack React applications using React Router.
+## Overview
 
-## Features
+This project allows Grist users and internal app developers to quickly extend Grist’s functionality by generating AI-powered, embedded React apps (like Claude Artifacts). These apps integrate deeply with Grist features, offering robust data manipulation and visualization capabilities.
 
-- 🚀 Server-side rendering
-- ⚡️ Hot Module Replacement (HMR)
-- 📦 Asset bundling and optimization
-- 🔄 Data loading and mutations
-- 🔒 TypeScript by default
-- 🎉 TailwindCSS for styling
-- 📖 [React Router docs](https://reactrouter.com/)
+## Demo
+
+[![Demo Video - Part 1](https://cdn.loom.com/sessions/thumbnails/a76ccf7ea9cf4712acd7309a8c3154ce-with-play.gif)](https://www.loom.com/share/a76ccf7ea9cf4712acd7309a8c3154ce?sid=2da6719e-639d-4fbc-b769-8ab4d1e7064f)
+
+[![Demo Video - Part 2](https://cdn.loom.com/sessions/thumbnails/cf0b8fc9cc3448508c8721796c56e331-with-play.gif)](https://www.loom.com/share/cf0b8fc9cc3448508c8721796c56e331?sid=0a35a018-bd1f-4e6e-b539-3d27a5276533)
+
+## Key Features
+
+- AI-Generated Apps: Uses prompts to generate React apps that leverage injected hooks for deep Grist integration.
+- Data Operations: Supports bulk / custom record insertion, updating, and deletion.
+- Widget Linking & Filtering: Integrates seamlessly with Grist widget linking and filtering. Generate custom searching and filtering widgets.
+- Custom SQL: Allows running custom SQL queries.
+- Chart Rendering: Utilizes Recharts for data visualization.
+- UI/UX: Default styling with Shadcn and Tailwind CSS.
+- User Configurability: Supports storing options and preferences for enhanced customization in local storage, session storage, or full all users in Grist widget options 
+
+## Use Cases
+-	Automating Data Entry: Quickly create interfaces for bulk data uploads and modifications.
+-	Dashboards: Generate custom dashboards that visualize data using Recharts.
+-	Advanced Filtering: Implement complex filtering mechanisms that interact with other Grist widgets.
+-	Custom Workflows: Design specialized workflows that leverage Grist’s data with dedicated UIs
+- Printing and reports: Generate custom print and PDF reports using React code
 
 ## Getting Started
 
-### Installation
+The widget has a server for AI interaction, and as a result is available as a Docker container.
 
-Install the dependencies:
+### Prerequisites
+- A Docker environment (Fly, Kubernetes, etc)
+- An Anthropic API key.
+- Your Grist base URL.
 
-```bash
-npm install
-```
+### Deployment
 
-### Development
+It's available on `ghcr.io/ben-pr-p/grist-artifacts`.
 
-Start the development server with HMR:
+1.	Set your ANTHROPIC_API_KEY and GRIST_BASE_URL as environment variables.
+2.	Deploy the Docker container on your preferred platform (e.g., Fly, Kubernetes).
+3.	Add a custom widget in Grist pointing to your deployed domain (e.g. `https://your-domain.fly.dev`)
 
-```bash
-npm run dev
-```
+Usage
+- Simply add the custom widget in Grist, pop open the AI panel, and generate an app! If you need
+	it to insert into a particular table or store something as a Grist option, just ask for it.
 
-Your application will be available at `http://localhost:5173`.
-
-## Previewing the Production Build
-
-Preview the production build locally:
-
-```bash
-npm run preview
-```
-
-## Building for Production
-
-Create a production build:
-
-```bash
-npm run build
-```
-
-## Deployment
-
-Deployment is done using the Wrangler CLI.
-
-To build and deploy directly to production:
-
-```sh
-npm run deploy
-```
-
-To deploy a preview URL:
-
-```sh
-npx wrangler versions upload
-```
-
-You can then promote a version to production after verification or roll it out progressively.
-
-```sh
-npx wrangler versions deploy
-```
-
-## Styling
-
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
-
----
-
-Built with ❤️ using React Router.
+Troubleshooting
+- AI Generation Errors: If the AI-generated code produces an error, the error message is displayed so you can troubleshoot and iterate on the prompt.
+- Access Issues: Ensure the GRIST_BASE_URL and user permissions are correctly set to allow spending AI tokens. The server widget authenticates with the server by sending the logged in user's access token, which is then checked by making an API call to the provided GRIST_BASE_URL.

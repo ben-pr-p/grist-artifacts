@@ -6,12 +6,8 @@
 /.react-router/
 /build/
 
-# Cloudflare
-.mf
-.wrangler
-.dev.vars*
-
 .aider*
 .env
-wrangler.jsonc
-worker-configuration.d.ts
+
+# Optional: Keep worker-configuration.d.ts if still relevant for other typings
+# worker-configuration.d.ts
