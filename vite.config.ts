@@ -6,10 +6,7 @@ import tsconfigPaths from "vite-tsconfig-paths";
 export default defineConfig({
   plugins: [tailwindcss(), reactRouter(), tsconfigPaths()],
   define: {
-    "process.env": {
-      ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
-      GRIST_BASE_URL: process.env.GRIST_BASE_URL,
-    },
+    "process.env": {},
   },
   resolve:
     process.env.NODE_ENV === "development"

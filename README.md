@@ -52,6 +52,31 @@ It's available on `ghcr.io/ben-pr-p/grist-artifacts`.
 - AI Generation Errors: If the AI-generated code produces an error, the error message is displayed so you can troubleshoot and iterate on the prompt.
 - Access Issues: Ensure the GRIST_BASE_URL and user permissions are correctly set to allow spending AI tokens. The server widget authenticates with the server by sending the logged in user's access token, which is then checked by making an API call to the provided GRIST_BASE_URL.
 
+## How It Works
+
+The app works by storing 2 primary pieces of information in Grist widget options.
+1. the user's code (written in JSX, etc.)
+2. the transformed code (the output of running Babel on the user's code)
+
+When the widget is loaded, it loads the transformed code and generates a React comopnent from it.
+It then renders it, passing to it:
+- The data passed into the custom widget via props
+- A set of custom React hooks that provide Grist integration capabilities, including data access, record manipulation, and widget linking functionality. These hooks are defined in the [Grist client library](https://github.com/ben-pr-p/grist-artifacts/blob/main/app/lib/grist.client.ts).
+
+When "Open Configuration" is clicked, the widget routes to /editor, which loads the editing environment to manipulate the user's code and interact with the AI chatbot helper.
+
+It's a separate route to keep the main widget route's code lighter (editor needs to load babel, the code editor, etc., and isn't used for most users).
+
+## Security / Authorization
+
+The widget uses Grist's iframe based widget API to modify and load data, which means it can only
+load data that the current user has access to.
+
+## Privacy
+
+Interacting with the AI chatbot sends 3 records from every table to Anthropic via API.
+
+
 ## Contributing
 
 There's a few bigger things to do that I'd like some help on:
