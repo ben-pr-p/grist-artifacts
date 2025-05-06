@@ -6,9 +6,9 @@ This project allows Grist users and internal app developers to quickly extend Gr
 
 ## Demo
 
-[![Demo Video - Part 1](https://cdn.loom.com/sessions/thumbnails/a76ccf7ea9cf4712acd7309a8c3154ce-with-play.gif)](https://www.loom.com/share/a76ccf7ea9cf4712acd7309a8c3154ce?sid=2da6719e-639d-4fbc-b769-8ab4d1e7064f)
+[Demo Video - Part 1](https://www.loom.com/share/a76ccf7ea9cf4712acd7309a8c3154ce?sid=2da6719e-639d-4fbc-b769-8ab4d1e7064f)
 
-[![Demo Video - Part 2](https://cdn.loom.com/sessions/thumbnails/cf0b8fc9cc3448508c8721796c56e331-with-play.gif)](https://www.loom.com/share/cf0b8fc9cc3448508c8721796c56e331?sid=0a35a018-bd1f-4e6e-b539-3d27a5276533)
+[Demo Video - Part 2](https://www.loom.com/share/cf0b8fc9cc3448508c8721796c56e331?sid=0a35a018-bd1f-4e6e-b539-3d27a5276533)
 
 ## Key Features
 
@@ -44,10 +44,17 @@ It's available on `ghcr.io/ben-pr-p/grist-artifacts`.
 2.	Deploy the Docker container on your preferred platform (e.g., Fly, Kubernetes).
 3.	Add a custom widget in Grist pointing to your deployed domain (e.g. `https://your-domain.fly.dev`)
 
-Usage
+## Usage
 - Simply add the custom widget in Grist, pop open the AI panel, and generate an app! If you need
 	it to insert into a particular table or store something as a Grist option, just ask for it.
 
-Troubleshooting
+## Troubleshooting
 - AI Generation Errors: If the AI-generated code produces an error, the error message is displayed so you can troubleshoot and iterate on the prompt.
 - Access Issues: Ensure the GRIST_BASE_URL and user permissions are correctly set to allow spending AI tokens. The server widget authenticates with the server by sending the logged in user's access token, which is then checked by making an API call to the provided GRIST_BASE_URL.
+
+## Contributing
+
+There's a few bigger things to do that I'd like some help on:
+- **Improving the chat UI**: take in progress streaming code out of the widget and render a pending spinner instead for code generation
+- **Automatically feed errors back into the prompt**: This could just happen client side, but isn't happening yet
+- **Speed up edit generation**: Either use an established AI edit format, or generate a diff using a smart model (e.g. 3.7 sonnet) and apply the diff to the original code using a fast model (e.g. haiku).
