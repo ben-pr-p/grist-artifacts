@@ -340,3 +340,14 @@ export function useSelectedRows() {
 
   return [previouslySelectedRows, setSelectedRows];
 }
+
+export function useCursorRowId() {
+  const [previousCursorRowId, setPreviousCursorRowId] = useState<number>(0);
+
+  const setCursorRowId = (rowId: number) => {
+    setPreviousCursorRowId(rowId);
+    window.grist.setCursorPos({ rowId });
+  };
+
+  return [previousCursorRowId, setCursorRowId];
+}

@@ -11,6 +11,7 @@ import {
   atomWithGristBacking,
   useSQLQuery,
   useSelectedRows,
+  useCursorRowId,
 } from "@/lib/grist.client";
 import { useAtom } from "jotai";
 import { useSessionStorage } from "@/lib/hooks.client";
@@ -24,6 +25,7 @@ const gristHooks = {
   atomWithGristBacking,
   useSQLQuery,
   useSelectedRows,
+  useCursorRowId,
 };
 
 const utilHooks = {

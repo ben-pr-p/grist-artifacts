@@ -14,8 +14,8 @@ Grist implements something called "Widget Linking", which is where the row curre
 <widget_linking>
 Widget Linking is a powerful feature in Grist that allows different widgets to stay in sync about which records they're focusing on. To properly implement widget linking in your components:
 
-## useSelectedRows
-Import and use this hook to maintain selected rows across widgets:
+## useSelectedRows / useCursorRowId
+Import and use these hooks to maintain selected and focused rows across widgets:
 \`\`\`javascript
 import { useSelectedRows } from 'grist-hooks';
 
@@ -23,11 +23,24 @@ import { useSelectedRows } from 'grist-hooks';
 const [selectedRows, setSelectedRows] = useSelectedRows();
 \`\`\`
 
-This hook should almost always be used when your component renders data passed through props. It serves two important purposes:
+OR:
 
-1. **Sync with other widgets**: When other widgets select rows, your component will be aware of those selections.
+\`\`\`javascript
+import { useCursorRowId } from 'grist-hooks';
 
-2. **Inform other widgets**: When your component selects rows, other widgets will be updated accordingly.
+// Inside your component:
+const [previousCursorRowId, setCursorRowId] = useCursorRowId();
+\`\`\`
+
+One of these two hooks should almost always be used.
+
+If the requested component implements some sort of filtering or searching, use \`useSelectedRows\` to
+communicate to other Grist widgets which records match the filter.
+
+If the requested component displays each record passed in via props, use \`useCursorRowId\` to
+communicate to other Grist widgets which record the user is focused on.
+
+It is possible to use both hooks in the same component if both filtering and focusing on a record are implemented.
 
 When to use it:
 
@@ -42,13 +55,14 @@ setSelectedRows(filteredRecords.map(record => record.id));
 \`\`\`javascript
 // When a user clicks on a record
 const handleRecordClick = (recordId) => {
-  setSelectedRows([recordId]);
+  setCursorRowId(recordId);
 };
 \`\`\`
 
 - **For clearing selection**: To clear all selections:
 \`\`\`javascript
 setSelectedRows([]);
+setCursorRowId('new'); // focused on nothing / a new record
 \`\`\`
 
 This hook ensures that when users interact with your widget, other Grist widgets will update appropriately to show related information.
