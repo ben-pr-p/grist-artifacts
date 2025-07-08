@@ -23,6 +23,7 @@ const SandpackEditorWithCallback = (props: Props) => {
 
   useEffect(() => {
     if (priorPropCode !== propCode) {
+      console.log("Resetting code");
       updateCode(propCode);
       setPriorPropCode(propCode);
     }
@@ -51,7 +52,9 @@ export default function CodeEditor({
   return (
     <SandpackProvider
       template="react"
-      files={{ "App.tsx": { code: initialCode, active: true } }}
+      files={{
+        "App.tsx": { code: initialCode, active: true, readOnly: false },
+      }}
     >
       <SandpackEditorWithCallback
         onCodeUpdated={onCodeUpdated}

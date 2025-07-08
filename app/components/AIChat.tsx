@@ -117,6 +117,7 @@ export function AIChat(props: {
           sampleRecords: recursiveTrimToThreeArrayMembers(table.sampleRecords),
         }))
       ),
+      currentArtifact: userCode || undefined,
     });
 
     setWaitingForResponseToStart(false);

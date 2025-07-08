@@ -3,6 +3,7 @@ import * as React from "react";
 import * as recharts from "recharts";
 import * as uiComponents from "@/components/ui";
 import * as lucide from "lucide-react";
+import * as reactMapGl from "react-map-gl/mapbox";
 import {
   useInsertRecord,
   useUpdateRecord,
@@ -16,6 +17,8 @@ import {
 import { useAtom } from "jotai";
 import { useSessionStorage } from "@/lib/hooks.client";
 import { useLocalStorage } from "@/lib/hooks.client";
+
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN!;
 
 const gristHooks = {
   useInsertRecord,
@@ -38,6 +41,8 @@ const jotai = {
 };
 
 const getReactComponentFromCode = (transformedCode: string) => {
+  window.MAPBOX_ACCESS_TOKEN = MAPBOX_TOKEN;
+
   const factoryFunction = new Function(transformedCode)();
   const component = factoryFunction(
     React,
@@ -46,7 +51,8 @@ const getReactComponentFromCode = (transformedCode: string) => {
     lucide,
     gristHooks,
     jotai,
-    utilHooks
+    utilHooks,
+    reactMapGl
   );
 
   return component;

@@ -12,7 +12,7 @@ export const transformCode = (code: string) => {
   }).code;
 
   return `
-return function(React, recharts, uiComponents, lucide, gristHooks, jotai) {
+return function(React, recharts, uiComponents, lucide, gristHooks, jotai, utilHooks, reactMapGl) {
   ${transpiledCode}
   return ${componentName};
 }
@@ -41,6 +41,8 @@ const importTransformerPlugin = () => ({
         objectName = "jotai";
       } else if (source === "util-hooks") {
         objectName = "utilHooks";
+      } else if (source === "react-map-gl") {
+        objectName = "reactMapGl";
       } else {
         objectName = source;
       }

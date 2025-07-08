@@ -61,7 +61,6 @@ const RequireScript: React.FC<RequireScriptProps> = ({
 
     // Set up successful load handler
     const handleLoad = (): void => {
-      console.log(`Script loaded: ${src}`);
       scriptElement?.setAttribute("data-loaded", "true");
       setScriptLoaded(true);
       if (onLoad) onLoad();

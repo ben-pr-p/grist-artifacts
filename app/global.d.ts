@@ -1,6 +1,7 @@
 // /* eslint-disable @typescript-eslint/no-explicit-any */
 declare global {
   interface Window {
+    MAPBOX_ACCESS_TOKEN: string;
     grist: {
       getTable: (tableId?: string) => Promise<GristTable>;
       ready: (options?: {

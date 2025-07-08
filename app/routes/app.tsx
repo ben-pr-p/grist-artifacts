@@ -6,6 +6,7 @@ import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
 import { ErrorBoundary } from "react-error-boundary";
 import { ErrorView } from "@/components/ErrorView";
+import { useState, useEffect } from "react";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -17,6 +18,15 @@ export function meta({}: Route.MetaArgs) {
 export default function Home() {
   const transformedCode = useAtomValue(transformedCodeAtom);
   const records = useAtomValue(recordsAtom);
+  const [errorBoundaryKey, setErrorBoundaryKey] = useState(0);
+  const [lastErrorCode, setLastErrorCode] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (lastErrorCode && transformedCode !== lastErrorCode) {
+      setErrorBoundaryKey(prev => prev + 1);
+      setLastErrorCode(null);
+    }
+  }, [transformedCode, lastErrorCode]);
 
   if (
     transformedCode === null ||
@@ -34,7 +44,18 @@ export default function Home() {
   }
 
   return (
-    <ErrorBoundary fallbackRender={({ error }) => <ErrorView error={error} />}>
+    <ErrorBoundary 
+      key={errorBoundaryKey}
+      fallbackRender={({ error, resetErrorBoundary }) => (
+        <ErrorView 
+          error={error} 
+          onCodeUpdate={() => {
+            setLastErrorCode(transformedCode);
+          }}
+          resetErrorBoundary={resetErrorBoundary}
+        />
+      )}
+    >
       <ComponentWithCode
         transformedCode={transformedCode}
         componentProps={{ data: records }}

@@ -230,7 +230,7 @@ export function atomWithGristBacking<T>(key: string, defaultValue: T) {
     },
     (_get, set, update) => {
       window.grist.setOption(key, update).then(() => {
-        console.log("Updated Grist Options", key, update);
+        console.log("Updated Grist Options", key);
       });
       set(hiddenAtom, {
         updatedInMountSession: true,
