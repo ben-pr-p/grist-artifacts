@@ -10,6 +10,7 @@ export default defineConfig({
       process.env.NODE_ENV === "development"
         ? {
             GRIST_BASE_URL: process.env.GRIST_BASE_URL,
+            OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY,
             ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
           }
         : {},

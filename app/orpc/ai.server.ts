@@ -1,39 +1,14 @@
 import { z } from "zod";
 import { base } from "./base.server";
-import { streamText } from "ai";
+import { generateText, streamText } from "ai";
+import {
+  createOpenRouter,
+  type OpenRouterProvider,
+} from "@openrouter/ai-sdk-provider";
 import { createAnthropic } from "@ai-sdk/anthropic";
+
 import { SYSTEM_PROMPT } from "@/lib/ai.server";
 import { env } from "@/env.server";
-
-function applyArtifactUpdates(
-  currentArtifact: string,
-  updates: ArtifactUpdate[]
-): { success: boolean; artifact: string; error?: string } {
-  let updatedArtifact = currentArtifact;
-  
-  for (const update of updates) {
-    if (!update.isComplete || !update.oldText || !update.newText) {
-      continue; // Skip incomplete updates
-    }
-    
-    // Check if the old text exists in the artifact
-    if (!updatedArtifact.includes(update.oldText)) {
-      return {
-        success: false,
-        artifact: currentArtifact,
-        error: `Text not found: "${update.oldText.substring(0, 50)}..."`
-      };
-    }
-    
-    // Apply the update
-    updatedArtifact = updatedArtifact.replace(update.oldText, update.newText);
-  }
-  
-  return {
-    success: true,
-    artifact: updatedArtifact
-  };
-}
 
 export const aiRouter = base.router({
   nextMessage: base
@@ -59,13 +34,23 @@ export const aiRouter = base.router({
           apiKey: env.ANTHROPIC_API_KEY,
         });
 
+        const openrouter = createOpenRouter({
+          apiKey: env.OPENROUTER_API_KEY,
+        });
+
         const renderedSystemPrompt = SYSTEM_PROMPT(structureDescription);
 
+        const allMessagesWithSystem = [
+          {
+            role: "system" as const,
+            content: renderedSystemPrompt,
+          },
+          ...allMessages,
+        ];
+
         const { textStream } = await streamText({
-          model: anthropic("claude-4-sonnet-20250514"),
-          messages: allMessages,
-          system: renderedSystemPrompt,
-          maxTokens: 64000,
+          model: anthropic("claude-sonnet-4-20250514"),
+          messages: allMessagesWithSystem,
         });
 
         let accumulatedText = "";
@@ -85,25 +70,36 @@ export const aiRouter = base.router({
 
           // Handle partial updates
           let currentArtifact = originalArtifact;
-          if (components?.grist_artifact_updates && components.grist_artifact_updates.length > 0) {
+          if (
+            components?.grist_artifact_updates &&
+            components.grist_artifact_updates.length > 0
+          ) {
             // Get only the complete updates that we haven't applied yet
             const newCompleteUpdates = components.grist_artifact_updates.filter(
-              update => update.isComplete && 
-              !allUpdatesApplied.some(applied => 
-                applied.oldText === update.oldText && 
-                applied.newText === update.newText
-              )
+              (update) =>
+                update.isComplete &&
+                !allUpdatesApplied.some(
+                  (applied) =>
+                    applied.instruction === update.instruction &&
+                    applied.updateDescription === update.updateDescription
+                )
             );
 
             if (newCompleteUpdates.length > 0) {
-              // Apply all updates (both previously applied and new ones) to the original artifact
-              allUpdatesApplied = [...allUpdatesApplied, ...newCompleteUpdates];
-              const updateResult = applyArtifactUpdates(originalArtifact, allUpdatesApplied);
-              
-              if (updateResult.success) {
-                currentArtifact = updateResult.artifact;
-              } else {
-                console.error("Failed to apply updates:", updateResult.error);
+              // Apply each new update sequentially to the current artifact
+              for (const update of newCompleteUpdates) {
+                try {
+                  const updatedCode = await applyUpdate(
+                    openrouter,
+                    update.instruction,
+                    currentArtifact,
+                    update.updateDescription
+                  );
+                  currentArtifact = updatedCode;
+                  allUpdatesApplied.push(update);
+                } catch (error) {
+                  console.error("Failed to apply update:", error);
+                }
               }
             }
           }
@@ -121,7 +117,9 @@ export const aiRouter = base.router({
           yield {
             fullResponse: accumulatedText,
             nextPart: chunk,
-            finishedArtifact: finishedArtifactFull || (allUpdatesApplied.length > 0 ? currentArtifact : undefined),
+            finishedArtifact:
+              finishedArtifactFull ||
+              (allUpdatesApplied.length > 0 ? currentArtifact : undefined),
             pendingArtifact: pendingArtifactFull,
             artifactPurpose: artifactPurpose,
           };
@@ -139,8 +137,8 @@ export interface ExtractedArtifact {
 }
 
 export interface ArtifactUpdate {
-  oldText: string;
-  newText: string;
+  instruction: string;
+  updateDescription: string;
   isComplete: boolean;
 }
 
@@ -173,38 +171,53 @@ export function extractPendingStructuredComponents(
   const updateArtifactRegex =
     /<grist_artifact_update[^>]*>([\s\S]*?)<\/grist_artifact_update>/g;
   const updateMatches = Array.from(text.matchAll(updateArtifactRegex));
-  
+
   if (updateMatches.length > 0) {
-    result.grist_artifact_updates = updateMatches.map(match => {
+    result.grist_artifact_updates = updateMatches.map((match) => {
       const content = match[1];
-      
-      // Parse old_text and new_text from the content
-      const oldTextMatch = content.match(/<old_text>([\s\S]*?)<\/old_text>/);
-      const newTextMatch = content.match(/<new_text>([\s\S]*?)<\/new_text>/);
-      
+
+      // Parse instruction and updateDescription from nested tags
+      const instructionMatch = content.match(
+        /<instruction>([\s\S]*?)<\/instruction>/
+      );
+      const updateDescriptionMatch = content.match(
+        /<update_description>([\s\S]*?)<\/update_description>/
+      );
+
       return {
-        oldText: oldTextMatch ? oldTextMatch[1] : "",
-        newText: newTextMatch ? newTextMatch[1] : "",
-        isComplete: true // Only matched complete blocks
+        instruction: instructionMatch ? instructionMatch[1] : "",
+        updateDescription: updateDescriptionMatch
+          ? updateDescriptionMatch[1]
+          : "",
+        isComplete: true, // Only matched complete blocks
       };
     });
   }
-  
+
   // Also check for incomplete update blocks
   const incompleteUpdateRegex = /<grist_artifact_update[^>]*>([\s\S]*?)$/;
   const incompleteMatch = text.match(incompleteUpdateRegex);
-  if (incompleteMatch && !text.includes("</grist_artifact_update>", incompleteMatch.index)) {
+  if (
+    incompleteMatch &&
+    !text.includes("</grist_artifact_update>", incompleteMatch.index)
+  ) {
     const content = incompleteMatch[1];
-    const oldTextMatch = content.match(/<old_text>([\s\S]*?)(?:<\/old_text>|$)/);
-    const newTextMatch = content.match(/<new_text>([\s\S]*?)(?:<\/new_text>|$)/);
-    
+    const instructionMatch = content.match(
+      /<instruction>([\s\S]*?)(?:<\/instruction>|$)/
+    );
+    const updateDescriptionMatch = content.match(
+      /<update_description>([\s\S]*?)(?:<\/update_description>|$)/
+    );
+
     if (!result.grist_artifact_updates) {
       result.grist_artifact_updates = [];
     }
     result.grist_artifact_updates.push({
-      oldText: oldTextMatch ? oldTextMatch[1] : "",
-      newText: newTextMatch ? newTextMatch[1] : "",
-      isComplete: false
+      instruction: instructionMatch ? instructionMatch[1] : "",
+      updateDescription: updateDescriptionMatch
+        ? updateDescriptionMatch[1]
+        : "",
+      isComplete: false,
     });
   }
 
@@ -223,4 +236,53 @@ export function extractPendingStructuredComponents(
   }
 
   return Object.keys(result).length > 0 ? result : undefined;
+}
+
+/**
+ * Instructions for code generation for thing to apply to morph model
+ * 
+    Use this tool to make an edit to an existing file.
+    This will be read by a less intelligent model, which will quickly apply the edit. You should make it clear what the edit is, while also minimizing the unchanged code you write.
+    When writing the edit, you should specify each edit in sequence, with the special comment // ... existing code ... to represent unchanged code in between edited lines.
+
+    For example:
+
+    // ... existing code ...
+    FIRST_EDIT
+    // ... existing code ...
+    SECOND_EDIT
+    // ... existing code ...
+    THIRD_EDIT
+    // ... existing code ...
+
+    You should still bias towards repeating as few lines of the original file as possible to convey the change.
+    But, each edit should contain sufficient context of unchanged lines around the code you're editing to resolve ambiguity.
+    DO NOT omit spans of pre-existing code (or comments) without using the // ... existing code ... comment to indicate its absence. If you omit the existing code comment, the model may inadvertently delete these lines.
+    If you plan on deleting a section, you must provide context before and after to delete it. If the initial code is ```code \n Block 1 \n Block 2 \n Block 3 \n code```, and you want to remove Block 2, you would output ```// ... existing code ... \n Block 1 \n  Block 3 \n // ... existing code ...```.
+    Make sure it is clear what the edit should be, and where it should be applied.
+    ALWAYS make all edits to a file in a single edit_file instead of multiple edit_file calls to the same file. The apply model can handle many distinct edits at once.
+ */
+async function applyUpdate(
+  openrouter: OpenRouterProvider,
+  instruction: string,
+  currentCode: string,
+  updateDescription: string
+) {
+  const userMessage = `
+    <instruction>
+      ${instruction}
+    </instruction>
+    <code>
+      ${currentCode}
+    </code>
+    <update>
+      ${updateDescription}
+    </update>`;
+
+  const updatedCode = await generateText({
+    model: openrouter("morph/morph-v3-fast") as any,
+    messages: [{ role: "user", content: userMessage }],
+  });
+
+  return updatedCode.text;
 }

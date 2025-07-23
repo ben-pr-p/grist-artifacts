@@ -88,7 +88,7 @@ export function AIChat(props: {
       ? [
           {
             role: "assistant" as const,
-            content: `Here is previous context from other sessions.\n\n <grist_artifact_purpose>${artifactPurpose}</grist_artifact_purpose>\n\n <grist_artifact_code>${userCode}</grist_artifact_code>`,
+            content: `Here is previous context from other sessions.\n\n <grist_artifact_purpose>${artifactPurpose}</grist_artifact_purpose>\n\n <current_grist_artifact>${userCode}</current_grist_artifact>`,
           },
         ]
       : [];

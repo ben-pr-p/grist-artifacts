@@ -24,6 +24,11 @@ async function fetchGristOrgs(accessToken: string) {
 export const authMiddleware = os
   .$context<Context>()
   .middleware(async ({ next, context }) => {
+    if (env.DISABLE_AUTH_CHECK) {
+      const response = await next();
+      return response;
+    }
+
     const { accessToken } = context;
 
     if (!accessToken) {
