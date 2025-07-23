@@ -34,13 +34,14 @@ The widget has a server for AI interaction, and as a result is available as a Do
 ### Prerequisites
 - A Docker environment (Fly, Kubernetes, etc)
 - An Anthropic API key.
+- An OpenRouter API key (for Morph model used in code edits).
 - Your Grist base URL.
 
 ### Deployment
 
 It's available on `ghcr.io/ben-pr-p/grist-artifacts`.
 
-1.	Set your ANTHROPIC_API_KEY and GRIST_BASE_URL as environment variables.
+1.	Set your ANTHROPIC_API_KEY, OPENROUTER_API_KEY, and GRIST_BASE_URL as environment variables.
 2.	Deploy the Docker container on your preferred platform (e.g., Fly, Kubernetes).
 3.	Add a custom widget in Grist pointing to your deployed domain (e.g. `https://your-domain.fly.dev`)
 
