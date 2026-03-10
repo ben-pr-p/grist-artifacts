@@ -49,7 +49,7 @@ export const aiRouter = base.router({
         ];
 
         const { textStream } = await streamText({
-          model: anthropic("claude-sonnet-4-20250514"),
+          model: anthropic("claude-sonnet-4-6"),
           messages: allMessagesWithSystem,
         });
 
